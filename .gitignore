@@ -169,3 +169,7 @@ cython_debug/
 
 # Project data
 data/
+mlruns/
+artifacts/
+mlflow.db
+mlflow.db-journal

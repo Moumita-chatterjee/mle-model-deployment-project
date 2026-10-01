@@ -3,6 +3,7 @@ from pathlib import Path
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import root_mean_squared_error
+import mlflow
 
 from data_preparation import (
     load_data,
@@ -50,18 +51,30 @@ print("X_val:", X_val.shape)
 print("y_train:", y_train.shape)
 print("y_val:", y_val.shape)
 
-model = RandomForestRegressor(
-    n_estimators=100,
-    random_state=42,
-    n_jobs=-1,
-)
 
-model.fit(X_train, y_train)
+mlflow.set_experiment("taxi-duration-baseline")
+with mlflow.start_run():
+    model = RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1,
+    )
+    mlflow.log_param("model_type", "RandomForestRegressor")
+    mlflow.log_param("n_estimators",100)
+    mlflow.log_param("random_state",42)
+    mlflow.log_param("features",FEATURES)
 
-print("Model training completed.")
 
-y_pred = model.predict(X_val)
-print("Predictions completed")
+    model.fit(X_train, y_train)
+    print("Model training completed.")
 
-rmse = root_mean_squared_error(y_val, y_pred)
-print(f"RMSE: {rmse:.2f} minutes ")
+    y_pred = model.predict(X_val)
+    print("Predictions completed")
+
+    rmse = root_mean_squared_error(y_val, y_pred)
+
+    mlflow.log_metric("rmse", float(rmse))
+
+    print(f"Validation RMSE: {rmse:.2f} minutes")
+
+    mlflow.sklearn.log_model(model, "model")
